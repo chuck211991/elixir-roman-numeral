@@ -14,7 +14,6 @@ defmodule RomanNumeral do
     { 40, "XL" },
     { 10, "X" },
     { 9, "IX" },
-    { 6, "VI" },
     { 5, "V" },
     { 4, "IV" },
     { 1, "I" }
@@ -65,66 +64,34 @@ defmodule RomanNumeral do
     0
   end
 
-  defp to_number([numeral], [{ arabic, roman }]) when numeral == roman do
-    arabic
-  end
-
-  defp to_number([numeral], [{ arabic, roman }]) do
-    raise "Invalid numeral \"#{ numeral }\" provided."
-  end
-
-  defp to_number([numerals_head, numerals_tail],  [{arabic, roman } | _]) when numerals_head <> numerals_tail == roman do
-    arabic
-  end
-
-  defp to_number([numerals_head, numerals_tail],  [{arabic, roman } | translations_tail]) do
-    to_number([numerals_head, numerals_tail], translations_tail)
-  end
-
-  defp to_number([numeral], [{ arabic, roman } | other_translations ]) do
-    if (numeral == roman) do
+  defp to_number([only_numeral], translations) do
+    match =  Enum.find(translations, nil, fn({ _, r }) -> r == only_numeral end)
+    if match do
+      { arabic, _ } = match
       arabic
     else
-      to_number([numeral], other_translations)
+      raise "Invalid numeral \"#{ only_numeral }\" provided."
     end
   end
 
-  defp to_number([numerals_head | numerals_tail], [{ arabic, roman } | translations_tail ]) do
-    if (numerals_head <> List.first(numerals_tail) == roman) do
-      [ _, remaining_numerals ] = List.pop_at(numerals_tail, 0)
-      arabic + to_number(remaining_numerals, @translations)
+  defp to_number([first_numeral, second_numeral], translations) do
+    match  = Enum.find(translations, nil, fn({ _, r }) -> r == first_numeral <> second_numeral end)
+    if match do
+      { arabic, _ } = match
+      arabic
     else
-      if (numerals_head == roman) do
-        arabic + to_number(numerals_tail, @translations)
-      else
-        first_two = numerals_head <> List.first(numerals_tail)
-        { match_two, _ } = Enum.find(@translations, fn({ a, r }) -> r == first_two end)
-        if (match_two) do
-          IO.puts(numerals_tail)
-          [ _, remaining_numerals ] = List.pop_at(numerals_tail, 0)
-          if (length(remaining_numerals > 1)) do
-            match_two + to_number(remaining_numerals, @translations)
-          else
-            match_two
-          end
-        else
-          { match_one, _ } = Enum.find(@translations, fn({ a, r }) -> r == numerals_head end)
-          match_one + to_number(numerals_tail, @translations)
-        end
-      end
+      to_number([first_numeral], @translations) + to_number([second_numeral], @translations)
     end
   end
 
-  defp to_number([head | tail], _) when head <> tail == "VI" do
-    6
+
+  defp to_number([first_numeral, second_numeral | numeral_tail ], translations) do
+    to_number([first_numeral, second_numeral], translations) + to_number(numeral_tail, @translations)
   end
 
-  #defp to_number(numeral, [{ arabic, roman } | tail ]) do
-    #if (numeral == roman)
-      #arabic
-    #else
-      #to_number(numeral | tail)
-    #end
+  #defp to_number([numerals_head, numerals_tail], [{ _, roman} | translations_tail ]) do
+    #{ match_one, _ } = Enum.find(@translations, fn({ a, r }) -> r == numerals_head end)
+    #match_one + to_number(numerals_tail, @translations)
   #end
 
 end
